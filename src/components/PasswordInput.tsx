@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Input, InputProps } from "./ui/input";
 
 const PasswordInput = React.forwardRef<HTMLInputElement, InputProps>(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ({ className, type, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
 

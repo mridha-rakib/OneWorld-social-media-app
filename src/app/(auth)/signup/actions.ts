@@ -5,15 +5,15 @@ import prisma from "@/lib/prisma";
 import { signUpSchema, SignUpValues } from "@/lib/validation";
 import { hash } from "@node-rs/argon2";
 import { generateIdFromEntropySize } from "lucia";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { isRedirectError } from "next/dist/client/components/redirect";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function signUp(
   credentials: SignUpValues,
 ): Promise<{ error: string }> {
   try {
-    const { email, password, username } = signUpSchema.parse(credentials);
+    const { username, email, password } = signUpSchema.parse(credentials);
 
     const passwordHash = await hash(password, {
       memoryCost: 19456,
@@ -54,19 +54,20 @@ export async function signUp(
       };
     }
 
-    await prisma.user.create({
-      data: {
-        id: userId,
-        username,
-        displayName: username,
-        email,
-        passwordHash,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.user.create({
+        data: {
+          id: userId,
+          username,
+          displayName: username,
+          email,
+          passwordHash,
+        },
+      });
     });
 
     const session = await lucia.createSession(userId, {});
-    const sessionCookie = await lucia.createSessionCookie(session.id);
-
+    const sessionCookie = lucia.createSessionCookie(session.id);
     (await cookies()).set(
       sessionCookie.name,
       sessionCookie.value,
@@ -76,7 +77,7 @@ export async function signUp(
     return redirect("/");
   } catch (error) {
     if (isRedirectError(error)) throw error;
-    console.log(error);
+    console.error(error);
     return {
       error: "Something went wrong. Please try again.",
     };

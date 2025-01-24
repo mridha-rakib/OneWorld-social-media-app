@@ -1,5 +1,7 @@
 "use client";
 
+import LoadingButton from "@/components/LoadingButton";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   Form,
   FormControl,
@@ -9,13 +11,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
 import { signUpSchema, SignUpValues } from "@/lib/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUp } from "./actions";
 import { useState, useTransition } from "react";
-import { PasswordInput } from "@/components/PasswordInput";
-import LoadingButton from "@/components/LoadingButton";
+import { useForm } from "react-hook-form";
+import { signUp } from "./actions";
 
 export default function SignUpForm() {
   const [error, setError] = useState<string>();
@@ -56,7 +56,6 @@ export default function SignUpForm() {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="email"
@@ -66,10 +65,10 @@ export default function SignUpForm() {
               <FormControl>
                 <Input placeholder="Email" type="email" {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="password"

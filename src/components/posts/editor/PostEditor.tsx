@@ -5,13 +5,14 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import UserAvatar from "@/components/UserAvatar";
-
-import { Button } from "@/components/ui/button";
-import { submitPost } from "./actions";
 import "./styles.css";
+import { useSubmitPostMutation } from "./mutations";
+import LoadingButton from "@/components/LoadingButton";
 
 export default function PostEditor() {
   const { user } = useSession();
+
+  const mutation = useSubmitPostMutation();
 
   const editor = useEditor({
     extensions: [
@@ -25,14 +26,17 @@ export default function PostEditor() {
     ],
   });
 
+  const input =
+    editor?.getText({
+      blockSeparator: "\n",
+    }) || "";
+
   async function onSubmit() {
-    const input = editor?.getText({ blockSeparator: "\n" }) || "";
-    try {
-      await submitPost({ content: input });
-      editor?.commands.clearContent();
-    } catch (err) {
-      console.error(err);
-    }
+    mutation.mutate(input, {
+      onSuccess: () => {
+        editor?.commands.clearContent();
+      },
+    });
   }
 
   return (
@@ -44,8 +48,8 @@ export default function PostEditor() {
           className="max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3"
         />
       </div>
-      <div onClick={onSubmit} className="flex justify-end">
-        <Button className="mt-2 min-w-20 rounded-full">Post </Button>
+      <div className="flex justify-end">
+        <LoadingButton onClick={onSubmit} loading={mutation.isPending} disabled={!input.trim()} className="min-w-20">Post </Loading>
       </div>
     </div>
   );

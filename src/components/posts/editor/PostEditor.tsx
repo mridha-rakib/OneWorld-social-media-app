@@ -32,11 +32,14 @@ export default function PostEditor() {
     }) || "";
 
   async function onSubmit() {
-    mutation.mutate(input, {
-      onSuccess: () => {
-        editor?.commands.clearContent();
+    mutation.mutate(
+      { content: input },
+      {
+        onSuccess: () => {
+          editor?.commands.clearContent();
+        },
       },
-    });
+    );
   }
 
   return (
@@ -49,7 +52,14 @@ export default function PostEditor() {
         />
       </div>
       <div className="flex justify-end">
-        <LoadingButton onClick={onSubmit} loading={mutation.isPending} disabled={!input.trim()} className="min-w-20">Post </Loading>
+        <LoadingButton
+          onClick={onSubmit}
+          loading={mutation.isPending}
+          disabled={!input.trim()}
+          className="min-w-20"
+        >
+          Post{" "}
+        </LoadingButton>
       </div>
     </div>
   );

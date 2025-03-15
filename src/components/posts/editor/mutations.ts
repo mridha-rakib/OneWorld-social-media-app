@@ -1,4 +1,6 @@
+import { useSession } from "@/app/(main)/SessionProvider";
 import { useToast } from "@/hooks/use-toast";
+import { PostsPage } from "@/lib/types";
 import {
   InfiniteData,
   QueryFilters,
@@ -6,22 +8,27 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { submitPost } from "./actions";
-import { PostsPage } from "@/lib/types";
 
 export function useSubmitPostMutation() {
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
 
+  const { user } = useSession();
+
   const mutation = useMutation({
     mutationFn: submitPost,
     onSuccess: async (newPost) => {
-      const queryFilter: QueryFilters<
-        InfiniteData<PostsPage, string | null>,
-        Error,
-        InfiniteData<PostsPage, string | null>,
-        readonly unknown[]
-      > = { queryKey: ["post-feed", "for-you"] };
+      const queryFilter = {
+        queryKey: ["post-feed"],
+        predicate(query) {
+          return (
+            query.queryKey.includes("for-you") ||
+            (query.queryKey.includes("user-posts") &&
+              query.queryKey.includes(user.id))
+          );
+        },
+      } satisfies QueryFilters;
 
       await queryClient.cancelQueries(queryFilter);
 
@@ -29,6 +36,7 @@ export function useSubmitPostMutation() {
         queryFilter,
         (oldData) => {
           const firstPage = oldData?.pages[0];
+
           if (firstPage) {
             return {
               pageParams: oldData.pageParams,
@@ -47,14 +55,15 @@ export function useSubmitPostMutation() {
       queryClient.invalidateQueries({
         queryKey: queryFilter.queryKey,
         predicate(query) {
-          return !query.state.data;
+          return queryFilter.predicate(query) && !query.state.data;
         },
       });
+
       toast({
-        description: "Post created successfully",
+        description: "Post created",
       });
     },
-    onError: (error) => {
+    onError(error) {
       console.error(error);
       toast({
         variant: "destructive",
@@ -62,5 +71,6 @@ export function useSubmitPostMutation() {
       });
     },
   });
+
   return mutation;
 }

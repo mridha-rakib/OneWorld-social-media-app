@@ -5,9 +5,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params: { userId } }: { params: { userId: string } },
+  context: { params: Promise<{ userId: string }> },
 ) {
   try {
+    const { userId } = await context.params;
     const { user: loggedInUser } = await validateRequest();
 
     if (!loggedInUser) {
@@ -51,9 +52,10 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params: { userId } }: { params: { userId: string } },
+  context: { params: Promise<{ userId: string }> },
 ) {
   try {
+    const { userId } = await context.params;
     const { user: loggedInUser } = await validateRequest();
 
     if (!loggedInUser) {

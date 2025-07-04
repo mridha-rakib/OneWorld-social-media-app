@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import UserAvatar from "./UserAvatar";
 import FollowButton from "./FollowButton";
+import Linkify from "./Linkify";
+import FollowerCount from "./FollowerCount";
 
 interface UserTooltipProps extends PropsWithChildren {
   user: userData;
@@ -31,7 +33,6 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
-
         <TooltipContent>
           <div className="flex max-w-80 flex-col gap-3 break-words px-1 py-2.5 md:min-w-52">
             <div className="flex items-center justify-between gap-2">
@@ -50,6 +51,14 @@ export default function UserTooltip({ children, user }: UserTooltipProps) {
                 <div className="text-muted-foreground">@{user.username}</div>
               </Link>
             </div>
+            {user.bio && (
+              <Linkify>
+                <div className="line-clamp-4 whitespace-pre-line">
+                  {user.bio}
+                </div>
+              </Linkify>
+            )}
+            <FollowerCount userId={user.id} initialState={followerState} />
           </div>
         </TooltipContent>
       </Tooltip>

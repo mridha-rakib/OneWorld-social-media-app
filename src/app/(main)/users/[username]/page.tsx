@@ -1,19 +1,21 @@
 import { validateRequest } from "@/auth";
 import FollowButton from "@/components/FollowButton";
 import FollowerCount from "@/components/FollowerCount";
+import Linkify from "@/components/Linkify";
+import TrendsSidebar from "@/components/TrendsSidebar";
 import UserAvatar from "@/components/UserAvatar";
 import prisma from "@/lib/prisma";
-import { FollowerInfo, getUserDataSelect, userData } from "@/lib/types";
+import { FollowerInfo, getUserDataSelect, UserData } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { formatDate } from "date-fns";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import EditProfileButton from "./EditProfileButton";
 import UserPosts from "./UserPosts";
-import TrendsSidebar from "@/components/TrendsSidebar";
 
 interface PageProps {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }
 
 const getUser = cache(async (username: string, loggedInUserId: string) => {
@@ -33,8 +35,10 @@ const getUser = cache(async (username: string, loggedInUserId: string) => {
 });
 
 export async function generateMetadata({
-  params: { username },
+  params,
 }: PageProps): Promise<Metadata> {
+  const { username } = await params;
+
   const { user: loggedInUser } = await validateRequest();
 
   if (!loggedInUser) return {};
@@ -46,7 +50,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function Page({ params: { username } }: PageProps) {
+export default async function Page({ params }: PageProps) {
+  const { username } = await params;
   const { user: loggedInUser } = await validateRequest();
 
   if (!loggedInUser) {
@@ -76,7 +81,7 @@ export default async function Page({ params: { username } }: PageProps) {
 }
 
 interface UserProfileProps {
-  user: userData;
+  user: UserData;
   loggedInUserId: string;
 }
 
@@ -104,7 +109,7 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           <div>Member since {formatDate(user.createdAt, "MMM d, yyyy")}</div>
           <div className="flex items-center gap-3">
             <span>
-              Posts:
+              Posts:{" "}
               <span className="font-semibold">
                 {formatNumber(user._count.posts)}
               </span>
@@ -113,15 +118,20 @@ async function UserProfile({ user, loggedInUserId }: UserProfileProps) {
           </div>
         </div>
         {user.id === loggedInUserId ? (
-          <button> User profile </button>
+          <EditProfileButton user={user} />
         ) : (
           <FollowButton userId={user.id} initialState={followerInfo} />
         )}
       </div>
       {user.bio && (
-        <div className="overflow-hidden whitespace-pre-line break-words">
-          {user.bio}
-        </div>
+        <>
+          <hr />
+          <Linkify>
+            <div className="overflow-hidden whitespace-pre-line break-words">
+              {user.bio}
+            </div>
+          </Linkify>
+        </>
       )}
     </div>
   );

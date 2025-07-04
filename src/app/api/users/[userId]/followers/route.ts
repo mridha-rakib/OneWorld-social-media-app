@@ -84,9 +84,10 @@ export async function POST(
 
 export async function DELETE(
   req: Request,
-  { params: { userId } }: { params: { userId: string } },
+  context: { params: Promise<{ userId: string }> },
 ) {
   try {
+    const { userId } = await context.params;
     const { user: loggedInUser } = await validateRequest();
 
     if (!loggedInUser) {

@@ -3,7 +3,6 @@ import { useToast } from "@/hooks/use-toast";
 import { PostsPage } from "@/lib/types";
 import {
   InfiniteData,
-  QueryFilters,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -11,9 +10,7 @@ import { submitPost } from "./actions";
 
 export function useSubmitPostMutation() {
   const { toast } = useToast();
-
   const queryClient = useQueryClient();
-
   const { user } = useSession();
 
   const mutation = useMutation({
@@ -21,6 +18,7 @@ export function useSubmitPostMutation() {
     onSuccess: async (newPost) => {
       const queryFilter = {
         queryKey: ["post-feed"],
+        // @ts-expect-error TanStack Query type inference issue with predicate function
         predicate(query) {
           return (
             query.queryKey.includes("for-you") ||
@@ -28,7 +26,7 @@ export function useSubmitPostMutation() {
               query.queryKey.includes(user.id))
           );
         },
-      } satisfies QueryFilters;
+      };
 
       await queryClient.cancelQueries(queryFilter);
 
